@@ -1,0 +1,7 @@
+*.egg-info/
+*.log
+*.pbf
+.coverage
+__pycache__/
+api.cache
+feeds/

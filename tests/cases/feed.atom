@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>osm-boundary-feed-test_generate_feed0</id>
+  <title>OSM changes: test-generate</title>
+  <updated>NOW</updated>
+  <link href="https://bradbeattie.com/osm/test_generate_feed0.atom" rel="self"/>
+  <generator uri="https://lkiesow.github.io/python-feedgen" version="1.0.0">python-feedgen</generator>
+  <entry>
+    <id>test_generate_feed0-2025-03-29</id>
+    <title>OSM changes for 2025-03-29</title>
+    <updated>NOW</updated>
+    <content>&lt;ul&gt;
+&lt;li&gt;🟢 &lt;a href="https://www.openstreetmap.org/way/292349079"&gt;Dulux Paints&lt;/a&gt;: +brand:wikidata=Q50921, +brand:wikipedia=en:Dulux, +brand=Dulux Paints, +building=yes, +opening_hours=Mo-Fr 07:00-18:00; Sa 08:00-16:00; Su 09:00-16:00, +shop=paint&lt;/li&gt;
+&lt;li&gt;🟢 &lt;a href="https://www.openstreetmap.org/node/12537526032"&gt;GHD&lt;/a&gt;: +office=consulting, +phone=+1 604-214-0510&lt;/li&gt;
+&lt;li&gt;🟢 &lt;a href="https://www.openstreetmap.org/node/12677769301"&gt;Level V Bakery&lt;/a&gt;: +amenity=cafe, +contact:email=admin@levelvbakery.com, +contact:facebook=levelVbakery, +contact:instagram=levelvbakery, +diet:vegan=only, +opening_hours=Mo-Su 09:00-18:00, +phone=+1-604-558-3232, +shop=bakery, +website=https://levelvbakery.com/&lt;/li&gt;
+&lt;li&gt;🟢 &lt;a href="https://www.openstreetmap.org/way/1359425440"&gt;Mount Pleasant Station Traffic Deck&lt;/a&gt;: +layer=1, +man_made=bridge, +note=Temporary road deck covering excavation for subway station construction&lt;/li&gt;
+&lt;li&gt;🟢 &lt;a href="https://www.openstreetmap.org/node/12537564026"&gt;Sarah McLachlan School of Music&lt;/a&gt;: +amenity=music_school, +phone=+1 778-870-3166, +website=https://sarahschoolofmusic.com&lt;/li&gt;
+&lt;li&gt;🟢 &lt;a href="https://www.openstreetmap.org/node/7647500333"&gt;Superbaba&lt;/a&gt;: +amenity=fast_food, +cuisine=middle_eastern&lt;/li&gt;
+&lt;li&gt;🟢 &lt;a href="https://www.openstreetmap.org/node/5905191685"&gt;Trees&lt;/a&gt;: +amenity=cafe, +cuisine=coffee_shop, +internet_access=wlan&lt;/li&gt;
+&lt;li&gt;✏️ &lt;a href="https://www.openstreetmap.org/node/1769915522"&gt;Glory Days&lt;/a&gt;: -name=Much &amp;amp; Little, +name=Glory Days&lt;/li&gt;
+&lt;li&gt;✏️ &lt;a href="https://www.openstreetmap.org/node/11068122035"&gt;Knowledge Barbers&lt;/a&gt;: -name=Knowlage, -shop=vacant, +hairdresser=barber, +name=Knowledge Barbers, +phone=(604) 423-3938, +shop=hairdresser, +website=https://www.knowledgebarbers.com/&lt;/li&gt;
+&lt;li&gt;❌ &lt;a href="https://www.openstreetmap.org/way/95184530"&gt;Cash Money&lt;/a&gt;: Updated 4 commercial spaces, -brand:wikidata=Q113252267, -brand=Cash Money, -building:levels=1, -building=retail, -name=Cash Money, -opening_hours=Mo-Sa 09:00-23:00; Su 11:00-18:00, -roof:levels=0, -roof:shape=flat, -shop=money_lender&lt;/li&gt;
+&lt;li&gt;❌ &lt;a href="https://www.openstreetmap.org/node/8724680906"&gt;Dulux Paints&lt;/a&gt;: Moving the only business occupying the full building to its trace, -brand:wikidata=Q50921, -brand:wikipedia=en:Dulux, -brand=Dulux Paints, -name=Dulux Paints, -shop=paint&lt;/li&gt;
+&lt;li&gt;❌ &lt;a href="https://www.openstreetmap.org/way/679166184"&gt;Nirvana Restaurant&lt;/a&gt;: Survey opening hours, -amenity=restaurant, -building:levels=2, -building=retail, -cuisine=indian, -internet_access=wlan, -name=Nirvana Restaurant, -opening_hours=Mo-Fr 11:30-22:30; Sa-Su 12:00-22:30, -phone=+1-604-872-8779, -roof:shape=flat, -source=walking, -website=http://www.nirvanarestaurant.ca&lt;/li&gt;
+&lt;/ul&gt;</content>
+    <published>2025-03-30T00:00:00+00:00</published>
+  </entry>
+</feed>
