@@ -1,20 +1,3 @@
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#   "beautifulsoup4==4.13.3",
-#   "feedgen==1.0.0",
-#   "humanfriendly==10.0",
-#   "lxml==5.3.1",
-#   "markdown==3.7",
-#   "osmium==4.0.2",
-#   "pydantic==2.10.6",
-#   "python-dateutil==2.9.0",
-#   "requests-cache==1.2.1",
-#   "requests==2.32.3",
-#   "rich==13.9.4",
-#   "typer==0.15.2",
-# ]
-# ///
 import itertools
 import json
 import logging
