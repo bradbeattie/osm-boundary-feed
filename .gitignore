@@ -1,7 +1,9 @@
 *.egg-info/
 *.log
 *.pbf
+*.sh
 .coverage
 __pycache__/
 api.cache
 feeds/
+regions

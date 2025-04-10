@@ -6,8 +6,8 @@
   <link href="https://bradbeattie.com/osm/test_generate_feed0.atom" rel="self"/>
   <generator uri="https://lkiesow.github.io/python-feedgen" version="1.0.0">python-feedgen</generator>
   <entry>
-    <id>test_generate_feed0-2025-03-29</id>
-    <title>OSM changes for 2025-03-29</title>
+    <id>test_generate_feed0-2025-04-09</id>
+    <title>OSM changes for 2025-04-09</title>
     <updated>NOW</updated>
     <content>&lt;ul&gt;
 &lt;li&gt;🟢 &lt;a href="https://www.openstreetmap.org/way/292349079"&gt;Dulux Paints&lt;/a&gt;: +brand:wikidata=Q50921, +brand:wikipedia=en:Dulux, +brand=Dulux Paints, +building=yes, +opening_hours=Mo-Fr 07:00-18:00; Sa 08:00-16:00; Su 09:00-16:00, +shop=paint&lt;/li&gt;
@@ -23,6 +23,6 @@
 &lt;li&gt;❌ &lt;a href="https://www.openstreetmap.org/node/8724680906"&gt;Dulux Paints&lt;/a&gt;: Moving the only business occupying the full building to its trace, -brand:wikidata=Q50921, -brand:wikipedia=en:Dulux, -brand=Dulux Paints, -name=Dulux Paints, -shop=paint&lt;/li&gt;
 &lt;li&gt;❌ &lt;a href="https://www.openstreetmap.org/way/679166184"&gt;Nirvana Restaurant&lt;/a&gt;: Survey opening hours, -amenity=restaurant, -building:levels=2, -building=retail, -cuisine=indian, -internet_access=wlan, -name=Nirvana Restaurant, -opening_hours=Mo-Fr 11:30-22:30; Sa-Su 12:00-22:30, -phone=+1-604-872-8779, -roof:shape=flat, -source=walking, -website=http://www.nirvanarestaurant.ca&lt;/li&gt;
 &lt;/ul&gt;</content>
-    <published>2025-03-30T00:00:00+00:00</published>
+    <published>2025-04-10T00:00:00+00:00</published>
   </entry>
 </feed>

@@ -3,6 +3,7 @@ import json
 import logging
 import shutil
 import subprocess
+import tempfile
 import urllib.parse
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -86,28 +87,25 @@ def snapshot_upstream(upstream_json: Path) -> Path | None:
     logger.debug(f"Considering {upstream_json}")
     for url in UpstreamConfig.model_validate_json(upstream_json.read_text()).urls:
         try:
-            temp = upstream_json.parent / ".osm.pbf.part"
-            with requests.get(url, stream=True, timeout=10) as r:
-                # Determine if we can skip this download
-                modified = date_parse(r.headers["Last-Modified"])
-                modified_ago = datetime.now(UTC) - modified
-                logger.debug(f"{url} last updated {format_timespan(modified_ago, max_units=1)} ago")
-                snapshot = upstream_json.parent / f"{modified.date().isoformat()}.osm.pbf"
-                if snapshot.exists():
-                    logger.info(f"{url} skipped as {snapshot} exists")
-                    return None
+            with tempfile.NamedTemporaryFile() as temp:
+                with requests.get(url, stream=True, timeout=10) as r:
+                    # Determine if we can skip this download
+                    modified = date_parse(r.headers["Last-Modified"])
+                    modified_ago = datetime.now(UTC) - modified
+                    logger.debug(f"{url} last updated {format_timespan(modified_ago, max_units=1)} ago")
+                    snapshot = upstream_json.parent / f"{modified.date().isoformat()}.osm.pbf"
+                    if snapshot.exists():
+                        logger.info(f"{url} skipped as {snapshot} exists")
+                        return None
 
-                size = int(r.headers["Content-Length"])
-                logger.info(f"{url} downloading {format_size(size, binary=True)} into {snapshot}")
-                with (
-                    Progress(*Progress.get_default_columns(), TransferSpeedColumn()) as progress,
-                    temp.open(mode="wb") as f,
-                ):
-                    task_id = progress.add_task("Downloading...", total=size)
-                    for chunk in r.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                        progress.update(task_id, advance=len(chunk))
-            shutil.move(temp, snapshot)
+                    size = int(r.headers["Content-Length"])
+                    logger.info(f"{url} downloading {format_size(size, binary=True)} into {snapshot}")
+                    with Progress(*Progress.get_default_columns(), TransferSpeedColumn()) as progress:
+                        task_id = progress.add_task("Downloading...", total=size)
+                        for chunk in r.iter_content(chunk_size=8192):
+                            temp.write(chunk)
+                            progress.update(task_id, advance=len(chunk))
+                shutil.move(temp.name, snapshot)
             logger.info(f"{url} downloaded to {snapshot}")
             return snapshot
         except requests.RequestException:
@@ -121,21 +119,25 @@ def extract_boundary(boundary_geojson: Path) -> None:
     for snapshot in sorted(boundary_geojson.parent.parent.glob("*.osm.pbf")):
         if not (extracted := boundary_geojson.parent / snapshot.name).exists():
             logger.info(f"Extracting {snapshot} to {extracted}")
-            subprocess.run(
-                args=[
-                    "/usr/bin/osmium",
-                    "extract",
-                    "--strategy",
-                    "simple",
-                    "--polygon",
-                    boundary_geojson.as_posix(),
-                    "-o",
-                    extracted.as_posix(),
-                    "--overwrite",
-                    snapshot.as_posix(),
-                ],
-                check=True,
-            )
+            with tempfile.NamedTemporaryFile() as temp:
+                subprocess.run(
+                    args=[
+                        "/usr/bin/osmium",
+                        "extract",
+                        "--strategy",
+                        "simple",
+                        "--polygon",
+                        boundary_geojson.as_posix(),
+                        "-o",
+                        temp.name,
+                        "-f",
+                        "pbf",
+                        "--overwrite",
+                        snapshot.as_posix(),
+                    ],
+                    check=True,
+                )
+                shutil.move(temp.name, extracted)
 
 
 def extract_jsonl(osm_pbf: Path) -> Path | None:
