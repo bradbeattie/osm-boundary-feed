@@ -104,7 +104,7 @@ def snapshot_upstream(upstream_json: Path) -> None:
 
 
 def download_osm_pbf(url: str, snapshot: Path) -> None:
-    with requests.get(url, stream=True, timeout=10) as r, tempfile.NamedTemporaryFile(dir=snapshot.parent) as temp:
+    with requests.get(url, stream=True, timeout=10) as r, tempfile.TemporaryDirectory(dir=snapshot.parent) as td:
         # Determine if we can skip this download
         modified = date_parse(r.headers["Last-Modified"])
         if snapshot.exists() and snapshot.stat().st_ctime >= modified.timestamp():
@@ -113,14 +113,16 @@ def download_osm_pbf(url: str, snapshot: Path) -> None:
 
         size = int(r.headers["Content-Length"])
         logger.info(f"{url}: Downloading {format_size(size, binary=True)} into {snapshot}")
-        with Progress(*Progress.get_default_columns(), TransferSpeedColumn()) as progress:
+        temp_path = Path(td) / "temp"
+        with temp_path.open("wb") as temp, Progress(*Progress.get_default_columns(), TransferSpeedColumn()) as progress:
             task_id = progress.add_task("Downloading...", total=size)
             for chunk in r.iter_content(chunk_size=8192):
                 temp.write(chunk)
                 progress.update(task_id, advance=len(chunk))
+
         if (temp_size := Path(temp.name).stat().st_size) != size:
             raise RuntimeError(f"Mismatched resultant size ({temp_size}) from expected size ({size})")
-        shutil.move(temp.name, snapshot)
+        shutil.move(temp_path, snapshot)
         logger.info(f"{url} downloaded to {snapshot}")
         return
 
