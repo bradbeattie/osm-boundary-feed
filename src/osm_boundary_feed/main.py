@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import tempfile
 import urllib.parse
-from datetime import UTC, datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -14,7 +14,7 @@ import typer
 from bs4 import BeautifulSoup
 from dateutil.parser import parse as date_parse
 from feedgen.feed import FeedGenerator
-from humanfriendly import format_size, format_timespan
+from humanfriendly import format_size
 from markdown import markdown
 from osmium import FileProcessor
 from osmium.filter import KeyFilter
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 BLACKLIST_NAME = ("name=",)
 BLACKLIST_META = ("addr:", "check_date=", "check_date:", "start_date=")
 EXITCODE_NO_FEEDS_GENERATED = 2
+JSONL_CONSIDERATION_LIMIT = 10
 
 
 class FeedConfig(BaseModel):
@@ -82,44 +83,54 @@ def run(
             generate_feed(feed_json, feed_atom)
 
 
-def snapshot_upstream(upstream_json: Path) -> Path | None:
+def snapshot_upstream(upstream_json: Path) -> None:
     """Downloads a snapshot of the upstream OSM data if there's a new one available"""
     logger.debug(f"Considering {upstream_json}")
+    snapshot = upstream_json.parent / f"{date.today().isoformat()}.osm.pbf"  # noqa: DTZ011
+    if snapshot.exists():
+        size = snapshot.stat().st_size
+        logger.info(f"{upstream_json} skipped as {snapshot} exists ({format_size(size, binary=True)})")
+        return
     for url in UpstreamConfig.model_validate_json(upstream_json.read_text()).urls:
         try:
-            with tempfile.NamedTemporaryFile() as temp:
-                with requests.get(url, stream=True, timeout=10) as r:
-                    # Determine if we can skip this download
-                    modified = date_parse(r.headers["Last-Modified"])
-                    modified_ago = datetime.now(UTC) - modified
-                    logger.debug(f"{url} last updated {format_timespan(modified_ago, max_units=1)} ago")
-                    snapshot = upstream_json.parent / f"{modified.date().isoformat()}.osm.pbf"
-                    if snapshot.exists():
-                        logger.info(f"{url} skipped as {snapshot} exists")
-                        return None
+            download_osm_pbf(url, snapshot)
+            break
+        except (requests.RequestException, RuntimeError) as e:
+            logger.warning(f"{url}: Failed to download: {e}")
+    else:
+        logger.warning(f"{upstream_json}: Failed to download. Creating empty file.")
+        snapshot.touch()
+    return
 
-                    size = int(r.headers["Content-Length"])
-                    logger.info(f"{url} downloading {format_size(size, binary=True)} into {snapshot}")
-                    with Progress(*Progress.get_default_columns(), TransferSpeedColumn()) as progress:
-                        task_id = progress.add_task("Downloading...", total=size)
-                        for chunk in r.iter_content(chunk_size=8192):
-                            temp.write(chunk)
-                            progress.update(task_id, advance=len(chunk))
-                shutil.move(temp.name, snapshot)
-            logger.info(f"{url} downloaded to {snapshot}")
-            return snapshot
-        except requests.RequestException:
-            logger.warning(f"Failed to download {url}")
-    logger.warning(f"Failed to download {upstream_json}")
-    return None
+
+def download_osm_pbf(url: str, snapshot: Path) -> None:
+    with requests.get(url, stream=True, timeout=10) as r, tempfile.NamedTemporaryFile(dir=snapshot.parent) as temp:
+        # Determine if we can skip this download
+        modified = date_parse(r.headers["Last-Modified"])
+        if snapshot.exists() and snapshot.stat().st_ctime >= modified.timestamp():
+            logger.info(f"{url} skipped as {snapshot} is recent")
+            return
+
+        size = int(r.headers["Content-Length"])
+        logger.info(f"{url}: Downloading {format_size(size, binary=True)} into {snapshot}")
+        with Progress(*Progress.get_default_columns(), TransferSpeedColumn()) as progress:
+            task_id = progress.add_task("Downloading...", total=size)
+            for chunk in r.iter_content(chunk_size=8192):
+                temp.write(chunk)
+                progress.update(task_id, advance=len(chunk))
+        if (temp_size := Path(temp.name).stat().st_size) != size:
+            raise RuntimeError(f"Mismatched resultant size ({temp_size}) from expected size ({size})")
+        shutil.move(temp.name, snapshot)
+        logger.info(f"{url} downloaded to {snapshot}")
+        return
 
 
 def extract_boundary(boundary_geojson: Path) -> None:
     """Extracts a subset of the parent directory's OSM data within the boundary"""
     for snapshot in sorted(boundary_geojson.parent.parent.glob("*.osm.pbf")):
-        if not (extracted := boundary_geojson.parent / snapshot.name).exists():
+        if snapshot.stat().st_size and not (extracted := boundary_geojson.parent / snapshot.name).exists():
             logger.info(f"Extracting {snapshot} to {extracted}")
-            with tempfile.NamedTemporaryFile() as temp:
+            with tempfile.NamedTemporaryFile(dir=boundary_geojson.parent) as temp:
                 subprocess.run(
                     args=[
                         "/usr/bin/osmium",
@@ -136,6 +147,7 @@ def extract_boundary(boundary_geojson: Path) -> None:
                         snapshot.as_posix(),
                     ],
                     check=True,
+                    timeout=60,
                 )
                 shutil.move(temp.name, extracted)
 
@@ -185,7 +197,7 @@ def generate_feed(feed_json: Path, feed_atom: Path) -> None:
 
     prev_nodes = None
     with CachedSession("api.cache", expire_after=timedelta(days=30), allowable_codes=[200, 410]) as session:
-        for jsonl in sorted(feed_json.parent.glob("*.jsonl")):
+        for jsonl in sorted(feed_json.parent.glob("*.jsonl"))[-JSONL_CONSIDERATION_LIMIT:]:
             prev_nodes = generate_feed_item(jsonl, feed_config, feedgen, prev_nodes, session)
 
     feed_atom.parent.mkdir(exist_ok=True)
@@ -210,6 +222,8 @@ def generate_feed_item(
         curr_nodes[node["id"]] = node
     if prev_nodes is not None:
         added, changed, removed = get_record_delta(curr_nodes, prev_nodes, feed_config)
+        if len(removed) > 1000:
+            raise RuntimeError("Something's amiss again")
         markdown_list = get_delta_markdown_list(added, changed, removed, feed_config, session)
         if markdown_list:
             region_name = day_jsonl.parent.name
